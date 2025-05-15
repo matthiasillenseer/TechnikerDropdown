@@ -3,100 +3,91 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>TechnikerDropdown</title>
+  <title>Techniker Dropdown</title>
   <style>
     body {
       font-family: sans-serif;
       padding: 10px;
+      margin: 0;
     }
     select {
-      padding: 5px;
+      padding: 8px;
       font-size: 14px;
-      width: 200px;
+      width: 100%;
+      max-width: 300px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: #333;
     }
   </style>
 </head>
 <body>
   <label id="label-techniker" for="techniker">Techniker auswählen:</label>
-  <select id="techniker">
-    <!-- Optionen werden dynamisch eingefügt -->
-  </select>
+  <select id="techniker"></select>
 
   <script src="https://cdn.jsdelivr.net/npm/jotform-custom-widget@1.3.0/lib/iframeCommunicator.js"></script>
   <script>
     document.addEventListener("DOMContentLoaded", () => {
-      const labelTechniker = document.getElementById("label-techniker");
+      // Konfiguration
+      const DEFAULT_TECHNIKER = ["Max Mustermann", "Alex Marzelon", "Lisa Beispiel"];
+      const DEFAULT_STANDARD = "";
+      const LABEL_HEIGHT = 30; // Höhe des Labels in Pixel
+
+      // Elemente
+      const label = document.getElementById("label-techniker");
       const dropdown = document.getElementById("techniker");
 
-      // Internationalisierung (Beispiel: Deutsch und Englisch)
-      const translations = {
-        de: {
-          label: "Techniker auswählen:"
-        },
-        en: {
-          label: "Select technician:"
-        }
+      // ------------ Funktionen ------------
+      const populateDropdown = (technikerListe, standardWert) => {
+        dropdown.innerHTML = "";
+        
+        technikerListe.forEach(name => {
+          const option = document.createElement("option");
+          option.value = name.trim();
+          option.textContent = name.trim();
+          option.selected = (name.trim() === standardWert);
+          dropdown.appendChild(option);
+        });
+
+        // Höhe dynamisch anpassen (Optionen * 25px + Label-Höhe)
+        const dropdownHeight = dropdown.options.length * 25 + LABEL_HEIGHT;
+        JFCustomWidget?.setHeight(dropdownHeight);
       };
 
-      // Sprache dynamisch setzen (z. B. aus Browser-Settings)
-      const userLang = navigator.language || "de";
-      const currentLang = translations[userLang] ? userLang : "de";
-      labelTechniker.textContent = translations[currentLang].label;
+      const handleChange = () => {
+        JFCustomWidget?.sendData({ value: dropdown.value });
+      };
 
-      // Funktion zum Befüllen des Dropdowns
-      function populateDropdown(technikerListe, standardWert) {
-        dropdown.innerHTML = ""; // Alte Optionen löschen
-
-        technikerListe.forEach(name => {
-          const opt = document.createElement("option");
-          opt.value = name.trim();
-          opt.textContent = name.trim();
-          opt.selected = (name.trim() === standardWert);
-          dropdown.appendChild(opt);
-        });
-
-        // Event-Listener für Änderungen
-        dropdown.addEventListener("change", () => {
-          if (typeof JFCustomWidget !== "undefined") {
-            JFCustomWidget.sendData({ value: dropdown.value });
-          }
-        });
-
-        // Dropdown-Höhe dynamisch anpassen
-        const dynamicHeight = dropdown.options.length * 20 + 20;
-        JFCustomWidget && JFCustomWidget.setHeight(dynamicHeight);
-      }
-
-      // Fallback für lokales Testen (ohne JotForm)
-      function localFallback() {
-        const defaultTechniker = ["Max", "Moritz", "Lisa"];
-        const defaultStandard = "";
-        populateDropdown(defaultTechniker, defaultStandard);
-        console.log("Lokal getestet – JotForm-Umgebung nicht erkannt.");
-      }
-
-      // Hauptlogik
+      // ------------ JotForm-Logik ------------
       if (typeof JFCustomWidget !== "undefined") {
-        // Läuft in JotForm – Parameter aus Settings holen
+        // JotForm-Umgebung
         JFCustomWidget.subscribe("ready", () => {
-          JFCustomWidget.setHeight(60);
+          JFCustomWidget.setHeight(100); // Initialhöhe
         });
 
-        JFCustomWidget.getWidgetSettings((settings) => {
+        JFCustomWidget.getWidgetSettings(settings => {
           try {
-            const techniker = settings.techniker
-              ? settings.techniker.split(",")
-              : ["Max", "Moritz", "Lisa"];
-            const standard = settings.standard || "";
+            const techniker = settings.techniker 
+              ? settings.techniker.split(",").map(t => t.trim())
+              : DEFAULT_TECHNIKER;
+
+            const standard = settings.standard?.trim() || DEFAULT_STANDARD;
+            
             populateDropdown(techniker, standard);
+            dropdown.addEventListener("change", handleChange);
           } catch (error) {
-            console.error("Fehler beim Abrufen der Widget-Einstellungen:", error);
-            localFallback();
+            console.error("Fehler in JotForm-Einstellungen:", error);
+            populateDropdown(DEFAULT_TECHNIKER, DEFAULT_STANDARD);
           }
         });
       } else {
-        // Läuft lokal – Fallback ausführen
-        localFallback();
+        // Lokales Fallback
+        populateDropdown(DEFAULT_TECHNIKER, DEFAULT_STANDARD);
+        console.log("Lokaler Testmodus - JotForm nicht erkannt");
       }
     });
   </script>
