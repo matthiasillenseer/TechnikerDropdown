@@ -1,0 +1,26 @@
+{
+  "name": "TechnikerDropdown",
+  "description": "Dropdown zur Auswahl eines Technikers",
+  "version": "1.0",
+  "category": "Form Fields",
+  "parameters": [
+    {
+      "name": "listItems",
+      "label": "Technikerliste (Komma-getrennt)",
+      "type": "text",
+      "default": "Max,Moritz,Lisa,Jonas"
+    },
+    {
+      "name": "defaultValue",
+      "label": "Standardwert",
+      "type": "text",
+      "default": ""
+    },
+    {
+      "name": "title",
+      "label": "Titel des Dropdowns",
+      "type": "text",
+      "default": "Techniker auswählen"
+    }
+  ]
+}
