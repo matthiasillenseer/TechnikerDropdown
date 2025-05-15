@@ -5,7 +5,7 @@
   <title>TechnikerDropdown</title>
   <style>
     body { font-family: sans-serif; padding: 10px; }
-    select { padding: 5px; font-size: 14px; }
+    select { padding: 5px; font-size: 14px; width: 200px; }
   </style>
 </head>
 <body>
@@ -16,33 +16,51 @@
 
   <script src="https://cdn.jsdelivr.net/npm/jotform-custom-widget@1.3.0/lib/iframeCommunicator.js"></script>
   <script>
-    // Parameter abholen
-    JFCustomWidget.getWidgetSettings(function(settings) {
-      const technikerListe = (settings.techniker || "Max,Moritz,Lisa").split(",");
-      const standard = settings.standard || "";
-
+    // Funktion zum Befüllen des Dropdowns
+    function populateDropdown(technikerListe, standardWert) {
       const dropdown = document.getElementById("techniker");
+      dropdown.innerHTML = ""; // Alte Optionen löschen
 
       technikerListe.forEach(name => {
         const opt = document.createElement("option");
         opt.value = name.trim();
         opt.textContent = name.trim();
-        if (name.trim() === standard) opt.selected = true;
+        opt.selected = (name.trim() === standardWert);
         dropdown.appendChild(opt);
       });
 
-      // Wert zurückgeben, wenn sich etwas ändert
-      dropdown.addEventListener("change", function () {
-        JFCustomWidget.sendData({ value: dropdown.value });
+      // Event-Listener für Änderungen
+      dropdown.addEventListener("change", () => {
+        if (typeof JFCustomWidget !== "undefined") {
+          JFCustomWidget.sendData({ value: dropdown.value });
+        }
+      });
+    }
+
+    // Fallback für lokales Testen (ohne JotForm)
+    function localFallback() {
+      const defaultTechniker = ["Max", "Moritz", "Lisa"];
+      const defaultStandard = "";
+      populateDropdown(defaultTechniker, defaultStandard);
+      console.log("Lokal getestet – JotForm-Umgebung nicht erkannt.");
+    }
+
+    // Hauptlogik
+    if (typeof JFCustomWidget !== "undefined") {
+      // Läuft in JotForm – Parameter aus Settings holen
+      JFCustomWidget.subscribe("ready", () => {
+        JFCustomWidget.setHeight(60);
       });
 
-      // Initialwert senden
-      JFCustomWidget.sendData({ value: dropdown.value });
-    });
-
-    JFCustomWidget.subscribe("ready", function() {
-      JFCustomWidget.setHeight(60);
-    });
+      JFCustomWidget.getWidgetSettings((settings) => {
+        const techniker = settings.techniker ? settings.techniker.split(",") : ["Max", "Moritz", "Lisa"];
+        const standard = settings.standard || "";
+        populateDropdown(techniker, standard);
+      });
+    } else {
+      // Läuft lokal – Fallback ausführen
+      localFallback();
+    }
   </script>
 </body>
 </html>
